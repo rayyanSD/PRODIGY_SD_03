@@ -1,0 +1,186 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_CONTACTS 100
+#define MAX_NAME_LENGTH 50
+#define MAX_PHONE_LENGTH 15
+#define MAX_EMAIL_LENGTH 50
+#define FILENAME "contacts.txt"
+
+// Define a structure to hold contact information
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    char phone[MAX_PHONE_LENGTH];
+    char email[MAX_EMAIL_LENGTH];
+} Contact;
+
+// Declare an array to store contacts and a variable for the current number of contacts
+Contact contacts[MAX_CONTACTS];
+int numContacts = 0;
+
+// Function to load contacts from a file
+void loadContacts() {
+    FILE *file = fopen(FILENAME, "r");
+    if (file == NULL) {
+        printf("No existing contact file found. Starting with an empty contact list.\n");
+        return;
+    }
+
+    while (fscanf(file, "%49[^,],%14[^,],%49[^\n]\n", contacts[numContacts].name, contacts[numContacts].phone, contacts[numContacts].email) != EOF) {
+        numContacts++;
+    }
+    fclose(file);
+}
+
+// Function to save contacts to a file
+void saveContacts() {
+    FILE *file = fopen(FILENAME, "w");
+    if (file == NULL) {
+        printf("Error saving contacts.\n");
+        return;
+    }
+
+    for (int i = 0; i < numContacts; i++) {
+        fprintf(file, "%s,%s,%s\n", contacts[i].name, contacts[i].phone, contacts[i].email);
+    }
+    fclose(file);
+}
+
+// Function to add a new contact
+void addContact() {
+    if (numContacts >= MAX_CONTACTS) {
+        printf("Contact list is full!\n");
+        return;
+    }
+
+    printf("Enter name: ");
+    getchar();  // Consume newline character left by previous input
+    fgets(contacts[numContacts].name, MAX_NAME_LENGTH, stdin);
+    contacts[numContacts].name[strcspn(contacts[numContacts].name, "\n")] = '\0'; // Remove newline
+
+    printf("Enter phone number: ");
+    fgets(contacts[numContacts].phone, MAX_PHONE_LENGTH, stdin);
+    contacts[numContacts].phone[strcspn(contacts[numContacts].phone, "\n")] = '\0'; // Remove newline
+
+    printf("Enter email address: ");
+    fgets(contacts[numContacts].email, MAX_EMAIL_LENGTH, stdin);
+    contacts[numContacts].email[strcspn(contacts[numContacts].email, "\n")] = '\0'; // Remove newline
+
+    numContacts++;
+    printf("Contact added successfully!\n");
+
+    saveContacts();  // Save updated contacts list to file
+}
+
+// Function to view all contacts
+void viewContacts() {
+    if (numContacts == 0) {
+        printf("No contacts available.\n");
+        return;
+    }
+
+    printf("\nContacts List:\n");
+    for (int i = 0; i < numContacts; i++) {
+        printf("Contact %d:\n", i + 1);
+        printf("Name: %s\n", contacts[i].name);
+        printf("Phone: %s\n", contacts[i].phone);
+        printf("Email: %s\n\n", contacts[i].email);
+    }
+}
+
+// Function to update an existing contact
+void updateContact() {
+    int index;
+    printf("Enter the contact number to update (1 to %d): ", numContacts);
+    scanf("%d", &index);
+    index--; // Adjust for zero-based index
+
+    if (index < 0 || index >= numContacts) {
+        printf("Invalid contact number.\n");
+        return;
+    }
+
+    printf("Enter new name (leave empty to keep current): ");
+    getchar(); // Consume the newline character left by previous input
+    fgets(contacts[index].name, MAX_NAME_LENGTH, stdin);
+    contacts[index].name[strcspn(contacts[index].name, "\n")] = '\0'; // Remove newline
+
+    printf("Enter new phone number (leave empty to keep current): ");
+    fgets(contacts[index].phone, MAX_PHONE_LENGTH, stdin);
+    contacts[index].phone[strcspn(contacts[index].phone, "\n")] = '\0'; // Remove newline
+
+    printf("Enter new email address (leave empty to keep current): ");
+    fgets(contacts[index].email, MAX_EMAIL_LENGTH, stdin);
+    contacts[index].email[strcspn(contacts[index].email, "\n")] = '\0'; // Remove newline
+
+    printf("Contact updated successfully!\n");
+
+    saveContacts();  // Save updated contacts list to file
+}
+
+// Function to delete a contact
+void deleteContact() {
+    int index;
+    printf("Enter the contact number to delete (1 to %d): ", numContacts);
+    scanf("%d", &index);
+    index--; // Adjust for zero-based index
+
+    if (index < 0 || index >= numContacts) {
+        printf("Invalid contact number.\n");
+        return;
+    }
+
+    // Shift contacts to remove the deleted contact
+    for (int i = index; i < numContacts - 1; i++) {
+        contacts[i] = contacts[i + 1];
+    }
+
+    numContacts--;
+    printf("Contact deleted successfully!\n");
+
+    saveContacts();  // Save updated contacts list to file
+}
+
+// Function to display the menu
+void displayMenu() {
+    printf("\nContact Management System\n");
+    printf("1. Add a contact\n");
+    printf("2. View all contacts\n");
+    printf("3. Update a contact\n");
+    printf("4. Delete a contact\n");
+    printf("5. Exit\n");
+    printf("Enter your choice: ");
+}
+
+int main() {
+    loadContacts();  // Load contacts from file at the start
+
+    int choice;
+    while (1) {
+        displayMenu();
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                addContact();
+                break;
+            case 2:
+                viewContacts();
+                break;
+            case 3:
+                updateContact();
+                break;
+            case 4:
+                deleteContact();
+                break;
+            case 5:
+                printf("Exiting the program...\n");
+                return 0;
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
+
+    return 0;
+}
+
